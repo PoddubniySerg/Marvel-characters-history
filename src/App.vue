@@ -1,19 +1,19 @@
 <template>
     <div id="app">
 
-        <app-header/>
+        <app-header :readSearch = "readSearch" />
 
         <div class="container">
             <h1 class="pt-3 pb-3">Персонажи Marvel</h1>
 
-            <pre>characterIndex: {{characterIndex}}</pre>
+            <app-modal :character = "searchCharacters[characterIndex]"/>
 
-            <app-modal :character = "characters[characterIndex]"/>
+            <spinner v-if="loading" />
 
-            <spinner/>
-
-            <div class="row">
-                <div v-for="(element, index) in characters"
+            <div v-else class="row">
+                <h5 v-if="!searchCharacters.length">Ничего не найдено</h5>
+                <div v-else
+                    v-for="(element, index) in searchCharacters"
                     :key="element.id"
                     class="card mb-3 col-sm-12 col-md-6 col-lg-4"
                 >
@@ -29,7 +29,7 @@
                                 <h5 class="card-title">{{element.name}}</h5>
                                 <button
                                     type="button"
-                                    class="btn btn-secondary"
+                                    class="btn btn-secondary btn-sm"
                                     data-bs-toggle="modal"
                                     data-bs-target="#exampleModal"
                                     @click="characterIndex = index">
@@ -62,6 +62,7 @@
                 loading: false,
                 characters: [],
                 characterIndex: 0,
+                search: '',
             }
         },
         methods: {
@@ -69,11 +70,23 @@
                 return fetch('https://netology-api-marvel.herokuapp.com/characters')
                         .then(res => res.json())
                         .then(json => this.characters = json)
-            }
+            },
+            readSearch: function(string){
+                this.search = string
+            },
         },
-        computed: {},
-        mounted(){
-            this.fetchCharacters()
+        computed: {
+            searchCharacters: function(){
+                const {search, characters} = this
+                return characters.filter(character => {
+                    return character.name.toLowerCase().indexOf(search.toLowerCase()) !== -1
+                })
+            },
+        },
+        async mounted(){
+            this.loading = true
+            await this.fetchCharacters()
+            this.loading = false
         },
     }
 </script>
